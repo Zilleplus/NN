@@ -1,5 +1,5 @@
 from typing import List
-from nnLib import Module, Tensor
+from nnLib import Module
 
 class Sequential(Module):
     __modules: List[Module]
@@ -7,7 +7,7 @@ class Sequential(Module):
     def __init__(self,modules: List[Module]):
         self.__modules = modules
 
-    def forward(self, x: Tensor):
+    def forward(self, x):
         for m in self.__modules:
             x = m.forward(x)
 

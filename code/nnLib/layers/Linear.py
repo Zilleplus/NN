@@ -1,16 +1,17 @@
-from nnLib import Tensor, Module
+from typing import Any
+from nnLib import Module
 
 class Linear(Module):
     in_features: int
     out_features: int
 
-    weights: Tensor
-    bias: Tensor
+    weights: Any
+    bias: Any
 
     def __init__(self, in_features: int, out_features: int):
         self.in_features = in_features
         self.out_features = out_features
 
     
-    def forward(self, x: Tensor):
+    def forward(self, x):
         ...

@@ -1,8 +1,5 @@
-from nnLib import Tensor
-
-
 class Module:
     training: bool = True
 
-    def forward(self, x: Tensor):
+    def forward(self, x):
         raise NotImplementedError()
