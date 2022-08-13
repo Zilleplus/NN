@@ -8,11 +8,16 @@ class MulTests(unittest.TestCase):
         x = Tensor(np.array([2]))
         y = Tensor(np.array([3]))
 
-        z = x * y
+        z: Tensor = x * y
 
-        numpy_res = z.numpy()
-        self.assertAlmostEqual(numpy_res[0], 6.0) 
+        self.assertAlmostEqual(z, Tensor.from_list([6.0])) 
 
-        # z.backward()
-        # self.assertIsNotNone(x.grad, "x is require_grad and backward is called, it should have gradient") 
-        # self.assertIsNotNone(y.grad, "x is require_grad and backward is called, it should have gradient")
+        z.backward()
+        self.assertIsNotNone(x.grad, "x is require_grad and backward is called, it should have gradient") 
+        self.assertIsNotNone(y.grad, "x is require_grad and backward is called, it should have gradient")
+
+        # dz/dx = 1*y
+        self.assertEquals(x.grad, y)
+
+        # dz/dy = x*1
+        self.assertEquals(y.grad, x)

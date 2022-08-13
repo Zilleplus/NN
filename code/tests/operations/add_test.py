@@ -9,12 +9,13 @@ class AddTests(unittest.TestCase):
 
         z: Tensor = x + y
 
-        numpy_res = z.numpy()
-        self.assertAlmostEqual(numpy_res[0], 1.0 + 2.0) 
+        self.assertEqual(z, Tensor.from_list([1.0 + 2.0])) 
 
         z.backward()
         self.assertIsNotNone(x.grad, "x is require_grad and backward is called, it should have gradient") 
-        self.assertIsNotNone(y.grad, "x is require_grad and backward is called, it should have gradient")
+        self.assertIsNotNone(y.grad, "y is require_grad and backward is called, it should have gradient")
 
-        self.assertAlmostEquals(x.grad.numpy()[0], 1)
-        self.assertAlmostEquals(y.grad.numpy()[0], 1)
+        # dz/dx = 1
+        self.assertEquals(x.grad, Tensor.from_list([1]))
+        # dz/dy = 1
+        self.assertEquals(y.grad, Tensor.from_list([1]))
