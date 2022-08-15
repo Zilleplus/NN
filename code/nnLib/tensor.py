@@ -1,7 +1,6 @@
-import re
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, overload
 import numpy as np
-from nnLib import Function, Add, Mul
+from nnLib import Function, Add, Mul, MatMul
 
 
 class Tensor:
@@ -10,10 +9,24 @@ class Tensor:
     ctx: Optional[Function]
     grad: Optional['Tensor']
 
+    @overload
     def __init__(self, data: np.ndarray, requires_grad=True):
-        self.__data = data
+        ...
+
+    @overload
+    def __init__(self, data: 'Tensor', requires_grad=True):
+        ...
+
+    def __init__(self, data: Any, requires_grad=True):
+        if isinstance(data, np.ndarray):
+            # If you pass it a numpy array, take ownership
+            self.__data = data
+        elif isinstance(data, Tensor):
+            # if you pass it a Tensor object -> copy ctor
+            self.__data = data.__data.copy()
+
         self.requires_grad = requires_grad
-        self.ctx = None
+        self.ctx = None  # used in backprop
         if(requires_grad):
             self.grad = Tensor.zeros(data.shape, requires_grad=False)
         else:
@@ -32,12 +45,19 @@ class Tensor:
         return Tensor(np.eye(size), requires_grad=requires_grad)
 
     @staticmethod
+    def constant(value: float, shape: Tuple):
+        return Tensor(np.ones(shape=shape)*value, requires_grad=False)
+
+    @staticmethod
     def ones(shape: Tuple, requires_grad=True):
         return Tensor(np.ones(shape), requires_grad=requires_grad)
 
     @staticmethod
     def from_list(values, requires_grad=True):
         return Tensor(np.array(values), requires_grad=requires_grad)
+
+    def like_zeros(self):
+        return Tensor.zeros(shape=self.shape, requires_grad=self.requires_grad)
 
     def __hash__(self) -> int:
         return id(self)
@@ -61,6 +81,14 @@ class Tensor:
         return Tensor(data=-self.__data,
                       requires_grad=self.requires_grad)
 
+    def matmul_data(self, other: 'Tensor') -> 'Tensor':
+        (*_ , num_rows_l, num_cols_l) = self.shape
+        (*_, num_rows_r, num_cols_r) = other.shape
+        
+        assert num_cols_l == num_rows_r, "Invalid matmul format"
+        
+        return Tensor(self.__data*other.__data, requires_grad=False)
+
     def __eq__(self, other):
         if not isinstance(other, Tensor):
             return False
@@ -71,6 +99,9 @@ class Tensor:
 
     def __mul__(self, other: 'Tensor'):
         return Mul.apply(self, other)
+
+    def matmul(self, other: 'Tensor'):
+        return MatMul.apply(self, other)
 
     def topological_sort(self):
         if self.ctx is None:
